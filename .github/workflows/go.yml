@@ -21,9 +21,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version-file: ./src/talos-os-config-generator-api/go.mod
+        go-version-file: ./go.mod
         check-latest: true
     - run: go version
+    - run: go mod vendor
 
     - name: Build
       run: go build -v ./src/talos-os-config-generator-api
