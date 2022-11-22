@@ -1,0 +1,1 @@
+# talos-os-config-generator
