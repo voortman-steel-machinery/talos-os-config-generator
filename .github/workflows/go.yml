@@ -20,6 +20,9 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version-file: ./src/talos-os-config-generator-api/go.mod
+    - run: go version
+    - run: pwd
+    - run: ls
 
     - name: Build
       run: go build -v ./src/talos-os-config-generator-api
