@@ -16,13 +16,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - run: go env -w GO111MODULE=auto
+
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
         go-version-file: ./src/talos-os-config-generator-api/go.mod
         check-latest: true
     - run: go version
-    - run: go env -w GO111MODULE=auto
 
     - name: Build
       run: go build -v ./src/talos-os-config-generator-api
