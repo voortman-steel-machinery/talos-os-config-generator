@@ -27,7 +27,7 @@ jobs:
     - run: go mod vendor
 
     - name: Build
-      run: go build -v ./src/talos-os-config-generator-api
+      run: go build -v ./src/api
 
     - name: Test
-      run: go test -v ./src/talos-os-config-generator-api
+      run: go test -v ./src/api
