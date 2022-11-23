@@ -1,4 +1,4 @@
-package api
+package generator
 
 import (
 	"log"
@@ -11,7 +11,7 @@ import (
 	"github.com/siderolabs/talos/pkg/machinery/constants"
 )
 
-func main() {
+func generate() {
 	// This is an example of generating a set of machine configuration files for multiple
 	// nodes of the cluster from a single cluster-specific cluster.
 
