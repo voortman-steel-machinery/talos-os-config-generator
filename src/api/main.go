@@ -42,7 +42,7 @@ func main() {
 func generate(c echo.Context) error {
 	configRequest := new(ConfigRequest)
 	if err := c.Bind(configRequest); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return c.String(http.StatusBadRequest, err.Error())
 	}
 
 	var controlplaneConfig []byte
@@ -50,11 +50,14 @@ func generate(c echo.Context) error {
 
 	configBundle := generator.GenerateConfig(configRequest.ClusterName, configRequest.ControlEndpoint, configRequest.IpAddress)
 
+	var err error
 	if configRequest.ConfigPatch != nil {
-		controlplaneConfig, workerConfig = generator.ApplyPatch(configBundle, configRequest.ConfigPatch)
+		controlplaneConfig, workerConfig, err = generator.ApplyPatch(configBundle, configRequest.ConfigPatch)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "Cannot apply patch.")
+		}
 
 	} else {
-		var err error
 		controlplaneConfig, err = configBundle.ControlplaneConfig.Bytes()
 		if err != nil {
 			return c.String(http.StatusInternalServerError, "Cannot generate controlplane config.")

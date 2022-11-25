@@ -23,3 +23,20 @@ Benefits include:
 - Create a Talosconfig to use in combination with talosctl
 - Able to add a patch file to merge with the created config files
 
+## Tools
+
+### marshal
+
+Creates a BASE64 encoded string to be used as input for the API from a yaml file.
+
+- Create tools/marshal/input.yaml with the patch content.
+- Run `go run tools/marshal/marshal.go`.
+- Use the created string as 'ConfigPatch' data in the JSON.
+
+### unmarshal
+
+Creates a config yaml from a received BASE64 encoded byte array.
+
+- Create tools/marshal/input.txt with the return value of the API of 1 of the configs.
+- Run `go run tools/unmarshal/unmarshal.go`.
+- Use the created output.yaml to validate the output.

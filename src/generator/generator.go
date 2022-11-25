@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/siderolabs/talos/pkg/machinery/config"
+	"github.com/siderolabs/talos/pkg/machinery/config/configpatcher"
 	v1alpha1 "github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1/generate"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1/machine"
@@ -77,10 +78,32 @@ func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress s
 	return configbundle
 }
 
-func ApplyPatch(configbundle configBundle, configPatch []byte) ([]byte, []byte) {
-	a := []byte("a")
-	b := []byte("b")
-	return a, b
+func ApplyPatch(configbundle configBundle, configPatch []byte) ([]byte, []byte, error) {
+	str := string(configPatch)
+	log.Println(str)
+	patch, err := configpatcher.LoadPatch(configPatch)
+	if err != nil {
+		log.Println("Cannot create patch: ", err)
+		return nil, nil, err
+	}
+
+	controlplane := _patchAndMarshal(configbundle.ControlplaneConfig, []configpatcher.Patch{patch})
+	worker := _patchAndMarshal(configbundle.WorkerConfig, []configpatcher.Patch{patch})
+
+	return controlplane, worker, nil
 	// config.
 	// patch, err := config.configPatcher.Patch.LoadPatch(configPatch)
+}
+
+func _patchAndMarshal(config config.Provider, patches []configpatcher.Patch) []byte {
+	cpcfg := configpatcher.WithConfig(config)
+	cpPatched, err := configpatcher.Apply(cpcfg, patches)
+	if err != nil {
+		log.Fatalf("Cannot apply patch: %s", err)
+	}
+	marshal, err := cpPatched.Bytes()
+	if err != nil {
+		log.Fatalf("failed to marshall config %s", err)
+	}
+	return marshal
 }
