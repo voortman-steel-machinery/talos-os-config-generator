@@ -79,8 +79,6 @@ func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress s
 }
 
 func ApplyPatch(configbundle configBundle, configPatch []byte) ([]byte, []byte, error) {
-	str := string(configPatch)
-	log.Println(str)
 	patch, err := configpatcher.LoadPatch(configPatch)
 	if err != nil {
 		log.Println("Cannot create patch: ", err)
