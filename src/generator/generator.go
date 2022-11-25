@@ -2,7 +2,6 @@ package generator
 
 import (
 	"log"
-	"os"
 
 	"github.com/siderolabs/talos/pkg/machinery/config"
 	v1alpha1 "github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
@@ -11,15 +10,14 @@ import (
 	"github.com/siderolabs/talos/pkg/machinery/constants"
 )
 
-func generate() {
-	// This is an example of generating a set of machine configuration files for multiple
-	// nodes of the cluster from a single cluster-specific cluster.
+type configBundle struct {
+	ControlplaneConfig *v1alpha1.Config
+	WorkerConfig       *v1alpha1.Config
+	TalosConfig        []byte
+}
 
-	// Input values for the config generation:
-
-	// * cluster name and Kubernetes control plane endpoint
-	clusterName := "test-cluster"
-	controlPlaneEndpoint := "https://kubernetes.example.com:6443"
+func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress string) configBundle {
+	configbundle := configBundle{}
 
 	// * Kubernetes version to install, using the latest here
 	kubernetesVersion := constants.DefaultKubernetesVersion
@@ -54,44 +52,35 @@ func generate() {
 		log.Fatalf("failed to generate input: %s", err)
 	}
 
-	// generate the machine config for each node of the cluster using the secrets
-	for _, node := range []string{"machine1", "machine2"} {
-		var cfg *v1alpha1.Config
+	// Generate the controlplane config
+	configbundle.ControlplaneConfig, err = generate.Config(machine.TypeControlPlane, input)
+	if err != nil {
+		log.Fatalf("failed to generate controlplane config: %s", err)
+	}
 
-		// generate the machine config for the node, using the right machine type:
-		// * machine.TypeConrolPlane for control plane nodes
-		// * machine.TypeWorker for worker nodes
-		cfg, err = generate.Config(machine.TypeControlPlane, input)
-		if err != nil {
-			log.Fatalf("failed to generate config for node %q: %s", node, err)
-		}
-
-		// config can be tweaked at this point to add machine-specific configuration, e.g.:
-		cfg.MachineConfig.MachineInstall.InstallDisk = "/dev/sdb"
-
-		// marshal the config to YAML
-		var marshaledCfg []byte
-
-		marshaledCfg, err = cfg.Bytes()
-		if err != nil {
-			log.Fatalf("failed to generate config for node %q: %s", node, err)
-		}
-
-		// write the config to a file
-		if err = os.WriteFile(clusterName+"-"+node+".yaml", marshaledCfg, 0o600); err != nil {
-			log.Fatalf("failed to write config for node %q: %s", node, err)
-		}
+	// Generate the worker config
+	configbundle.WorkerConfig, err = generate.Config(machine.TypeWorker, input)
+	if err != nil {
+		log.Fatalf("failed to generate worker config: %s", err)
 	}
 
 	// generate the client Talos configuration (for API access, e.g. talosctl)
-	clientCfg, err := generate.Talosconfig(input, generate.WithEndpointList(
-		[]string{"172.0.0.1", "172.0.0.2", "172.20.0.3"}, // list of control plane node IP addresses
-	))
+	clientCfg, err := generate.Talosconfig(input, generate.WithEndpointList([]string{ipAddress}))
 	if err != nil {
 		log.Fatalf("failed to generate client config: %s", err)
 	}
-
-	if err = clientCfg.Save(clusterName + "-talosconfig"); err != nil {
-		log.Fatalf("failed to save client config: %s", err)
+	configbundle.TalosConfig, err = clientCfg.Bytes()
+	if err != nil {
+		log.Fatalf("failed to generate talos config %s", err)
 	}
+
+	return configbundle
+}
+
+func ApplyPatch(configbundle configBundle, configPatch []byte) ([]byte, []byte) {
+	a := []byte("a")
+	b := []byte("b")
+	return a, b
+	// config.
+	// patch, err := config.configPatcher.Patch.LoadPatch(configPatch)
 }
