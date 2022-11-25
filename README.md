@@ -1,6 +1,6 @@
 # Talos OS config generator API
 
-[![License](https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge)](https://raw.githubusercontent.com/voortman/talos-os-config-generator/main/LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge)](https://raw.githubusercontent.com/voortman-steel-machinery/talos-os-config-generator/main/LICENSE)
 
 Serves an Rest-API that can generate Talos OS config files.
 
