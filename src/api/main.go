@@ -48,9 +48,12 @@ func generate(c echo.Context) error {
 	var controlplaneConfig []byte
 	var workerConfig []byte
 
-	configBundle := generator.GenerateConfig(configRequest.ClusterName, configRequest.ControlEndpoint, configRequest.IpAddress)
-
 	var err error
+	configBundle, err := generator.GenerateConfig(configRequest.ClusterName, configRequest.ControlEndpoint, configRequest.IpAddress)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Cannot create config.")
+	}
+
 	if configRequest.ConfigPatch != nil {
 		controlplaneConfig, workerConfig, err = generator.ApplyPatch(configBundle, configRequest.ConfigPatch)
 		if err != nil {
@@ -74,11 +77,3 @@ func generate(c echo.Context) error {
 		configBundle.TalosConfig,
 	})
 }
-
-/*
-
-marshaledCfg, err = cfg.Bytes()
-		if err != nil {
-			log.Fatalf("failed to generate config for node %q: %s", node, err)
-		}
-*/

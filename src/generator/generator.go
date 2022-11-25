@@ -17,7 +17,7 @@ type configBundle struct {
 	TalosConfig        []byte
 }
 
-func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress string) configBundle {
+func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress string) (configBundle, error) {
 	configbundle := configBundle{}
 
 	// * Kubernetes version to install, using the latest here
@@ -35,14 +35,16 @@ func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress s
 
 	versionContract, err = config.ParseContractFromVersion(targetVersion)
 	if err != nil {
-		log.Fatalf("failed to parse version contract: %s", err)
+		log.Println("failed to parse version contract: ", err)
+		return configBundle{}, err
 	}
 
 	// generate the cluster-wide secrets once and use it for every node machine configuration
 	// secrets can be stashed for future use by marshaling the structure to YAML or JSON
 	secrets, err := generate.NewSecretsBundle(generate.NewClock(), generate.WithVersionContract(versionContract))
 	if err != nil {
-		log.Fatalf("failed to generate secrets bundle: %s", err)
+		log.Println("failed to generate secrets bundle: ", err)
+		return configBundle{}, err
 	}
 
 	input, err := generate.NewInput(clusterName, controlPlaneEndpoint, kubernetesVersion, secrets,
@@ -50,32 +52,37 @@ func GenerateConfig(clusterName string, controlPlaneEndpoint string, ipAddress s
 		// there are many more generate options available which allow to tweak generated config programmatically
 	)
 	if err != nil {
-		log.Fatalf("failed to generate input: %s", err)
+		log.Println("failed to generate input: ", err)
+		return configBundle{}, err
 	}
 
 	// Generate the controlplane config
 	configbundle.ControlplaneConfig, err = generate.Config(machine.TypeControlPlane, input)
 	if err != nil {
-		log.Fatalf("failed to generate controlplane config: %s", err)
+		log.Println("failed to generate controlplane config: ", err)
+		return configBundle{}, err
 	}
 
 	// Generate the worker config
 	configbundle.WorkerConfig, err = generate.Config(machine.TypeWorker, input)
 	if err != nil {
-		log.Fatalf("failed to generate worker config: %s", err)
+		log.Println("failed to generate worker config: ", err)
+		return configBundle{}, err
 	}
 
 	// generate the client Talos configuration (for API access, e.g. talosctl)
 	clientCfg, err := generate.Talosconfig(input, generate.WithEndpointList([]string{ipAddress}))
 	if err != nil {
-		log.Fatalf("failed to generate client config: %s", err)
+		log.Println("failed to generate client config: ", err)
+		return configBundle{}, err
 	}
 	configbundle.TalosConfig, err = clientCfg.Bytes()
 	if err != nil {
-		log.Fatalf("failed to generate talos config %s", err)
+		log.Println("failed to generate talos config ", err)
+		return configBundle{}, err
 	}
 
-	return configbundle
+	return configbundle, nil
 }
 
 func ApplyPatch(configbundle configBundle, configPatch []byte) ([]byte, []byte, error) {
@@ -97,11 +104,11 @@ func _patchAndMarshal(config config.Provider, patches []configpatcher.Patch) []b
 	cpcfg := configpatcher.WithConfig(config)
 	cpPatched, err := configpatcher.Apply(cpcfg, patches)
 	if err != nil {
-		log.Fatalf("Cannot apply patch: %s", err)
+		log.Println("Cannot apply patch: ", err)
 	}
 	marshal, err := cpPatched.Bytes()
 	if err != nil {
-		log.Fatalf("failed to marshall config %s", err)
+		log.Println("failed to marshall config ", err)
 	}
 	return marshal
 }
