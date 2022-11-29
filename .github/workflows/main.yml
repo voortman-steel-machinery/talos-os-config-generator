@@ -57,4 +57,4 @@ jobs:
           push: true
           tags: |
             voortman/talos-os-config-generator:latest
-            voortman/talos-os-config-generator:${{ steps.gitversion.outputs.properties.GitVersion_SemVer }}
+            voortman/talos-os-config-generator:${{ needs.gitversion.outputs.properties.GitVersion_SemVer }}
