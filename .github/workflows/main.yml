@@ -1,0 +1,22 @@
+name: Main
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  gitversion:
+    uses: voortman-steel-machinery/services-workflows/.github/workflows/gitversion.yml@main
+
+  build:
+    needs: [gitversion]
+    uses: voortman-steel-machinery/services-workflows/.github/workflows/build-tag-image.yml@main
+    with:
+      docker-context: ./
+      docker-file: ./Dockerfile
+      docker-image-name: voortman/talos-os-config-generator
+      docker-latest-tag: true
+      gitversion-properties: ${{needs.gitversion.outputs.properties}}
+    secrets: inherit
