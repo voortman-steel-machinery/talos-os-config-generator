@@ -6,59 +6,41 @@ jobs:
   gitversion:
     name: Determine version
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:6.0-alpine
-      volumes:
-        - ${{ github.workspace }}:/repo
     outputs:
-      properties: ${{ steps.gitversion.outputs.properties }}
-      semver: ${{ steps.gitversion.outputs.semver }}
+      version: ${{ steps.getversion.outputs.version }}    
+    container:
+      image: gittools/gitversion:5.10.0-alpine.3.14-6.0
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Install gitversion
-        run: |
-          export PATH="$PATH:/github/home/.dotnet/tools"
-          dotnet tool install --global GitVersion.Tool --version 5.*
+      - id: getversion
+        run: | 
+          echo "version=$(/tools/dotnet-gitversion ${{ github.workspace }} /showvariable SemVer)" >> $GITHUB_OUTPUT
 
-      - name: GitVersion
-        id: gitversion
-        run: |
-          export PATH="$PATH:/github/home/.dotnet/tools"
-          cd /repo
-          dotnet-gitversion /output buildserver
-          cat $GITHUB_ENV
-          echo 'properties<<EOF' >> $GITHUB_OUTPUT
-          cat $GITHUB_ENV >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
-          echo "semver=$GitVersion_SemVer" >> $GITHUB_OUTPUT
-      
+  version-check:
+    runs-on: ubuntu-latest
+    needs: gitversion
+    steps:
+      - if: ${{!needs.gitversion.outputs.version}}
+        run: exit -1
+
+  test-job:
+    runs-on: ubuntu-latest
+    needs: [gitversion, version-check]
+    steps:
+      - run: |
+          echo Version: \'${{needs.gitversion.outputs.version}}\'
           
   build-tag-push:
     name: "Build, tag and push"
-    needs: gitversion
+    needs: [gitversion, version-check]
     runs-on: ubuntu-latest
     steps:
-      - name: Load environment values
-        run: |
-          source <(echo "${{ needs.gitversion.outputs.properties }}")
-          
       - uses: actions/checkout@v3
-#  The GitVersion GH actions give a NullReference exception for now.
-#      - uses: actions/setup-dotnet@v3
-#        with:
-#          dotnet-version: '6.x'
-#      - uses: gittools/actions/gitversion/setup@v0.9.15
-#        with:
-#          versionSpec: '5.x'
-#      - uses: gittools/actions/gitversion/execute@v0.9.15
-#        id: gitversion
-      
       - uses: docker/setup-buildx-action@v2        
-
       - uses: docker/login-action@v2
         with:
           username: ${{ secrets.CI_REGISTRY_USER }}
@@ -72,4 +54,4 @@ jobs:
           push: true
           tags: |
             voortman/talos-os-config-generator:latest
-            voortman/talos-os-config-generator:${{ needs.gitversion.outputs.semver }}
+            voortman/talos-os-config-generator:${{needs.gitversion.outputs.version}}
