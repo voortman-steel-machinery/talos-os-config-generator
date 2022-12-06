@@ -12,6 +12,7 @@ jobs:
         - ${{ github.workspace }}:/repo
     outputs:
       properties: ${{ steps.gitversion.outputs.properties }}
+      semver: ${{ steps.gitversion.outputs.semver }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -33,6 +34,7 @@ jobs:
           echo 'properties<<EOF' >> $GITHUB_OUTPUT
           cat $GITHUB_ENV >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
+          echo "semver=$GitVersion_SemVer" >> $GITHUB_OUTPUT
       
           
   build-tag-push:
@@ -43,6 +45,7 @@ jobs:
       - name: Load environment values
         run: |
           source <(echo "${{ needs.gitversion.outputs.properties }}")
+          
       - uses: actions/checkout@v3
 #  The GitVersion GH actions give a NullReference exception for now.
 #      - uses: actions/setup-dotnet@v3
@@ -69,4 +72,4 @@ jobs:
           push: true
           tags: |
             voortman/talos-os-config-generator:latest
-            voortman/talos-os-config-generator:$GitVersion_SemVer
+            voortman/talos-os-config-generator:${{ needs.gitversion.outputs.semver }}
