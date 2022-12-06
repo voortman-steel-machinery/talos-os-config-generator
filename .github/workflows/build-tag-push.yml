@@ -17,10 +17,13 @@ jobs:
           fetch-depth: 0
 
       - id: getversion
-        run: | 
+        run: |
+          ls -l ${{ github.workspace }}
+          ls -l ${{ github.workspace }}/./
           echo "version=$(/tools/dotnet-gitversion ${{ github.workspace }} /showvariable SemVer)" >> $GITHUB_OUTPUT
 
   version-check:
+    name: Check if version is defined
     runs-on: ubuntu-latest
     needs: gitversion
     steps:
