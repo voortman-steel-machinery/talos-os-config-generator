@@ -18,6 +18,7 @@ jobs:
 
       - id: getversion
         run: |
+          ls -l /home/runner/work/
           ls -l ${{ github.workspace }}
           ls -l ${{ github.workspace }}/./
           echo "version=$(/tools/dotnet-gitversion ${{ github.workspace }} /showvariable SemVer)" >> $GITHUB_OUTPUT
