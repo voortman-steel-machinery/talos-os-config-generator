@@ -36,13 +36,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+#  The GitVersion GH actions give a NullReference exception for now.
 #      - uses: actions/setup-dotnet@v3
 #        with:
 #          dotnet-version: '6.x'
-#      - uses: gittools/actions/gitversion/setup@v0.9.14
+#      - uses: gittools/actions/gitversion/setup@v0.9.15
 #        with:
 #          versionSpec: '5.x'
-#      - uses: gittools/actions/gitversion/execute@v0.9.14
+#      - uses: gittools/actions/gitversion/execute@v0.9.15
 #        id: gitversion
       
       - uses: docker/setup-buildx-action@v2        
@@ -60,4 +61,4 @@ jobs:
           push: true
           tags: |
             voortman/talos-os-config-generator:latest
-            voortman/talos-os-config-generator:${{ needs.gitversion.outputs.properties.GitVersion_SemVer }}
+            voortman/talos-os-config-generator:${{ needs.gitversion.outputs.properties }}
