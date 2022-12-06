@@ -27,6 +27,7 @@ jobs:
       - name: GitVersion
         id: gitversion
         run: |
+          export PATH="$PATH:/github/home/.dotnet/tools"
           cd /repo
           dotnet-gitversion /output buildserver
           cat $GITHUB_ENV
@@ -37,6 +38,7 @@ jobs:
       - name: SemVer
         id: semver
         run: |
+          export PATH="$PATH:/github/home/.dotnet/tools"
           cd /repo
           dotnet-gitversion /output buildserver /showvariable SemVer >> $GITHUB_OUTPUT
           
