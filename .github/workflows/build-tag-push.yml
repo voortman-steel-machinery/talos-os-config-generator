@@ -18,6 +18,7 @@ jobs:
 
       - id: getversion
         run: |
+          ls -l $GITHUB_WORKSPACE
           ls -l /home/runner/work/
           ls -l ${{ github.workspace }}
           ls -l ${{ github.workspace }}/./
