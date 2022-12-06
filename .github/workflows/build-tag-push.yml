@@ -12,7 +12,6 @@ jobs:
         - ${{ github.workspace }}:/repo
     outputs:
       properties: ${{ steps.gitversion.outputs.properties }}
-      semver: ${{ steps.semver.outputs.semver }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -35,18 +34,15 @@ jobs:
           cat $GITHUB_ENV >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
       
-      - name: SemVer
-        id: semver
-        run: |
-          export PATH="$PATH:/github/home/.dotnet/tools"
-          cd /repo
-          dotnet-gitversion /output buildserver /showvariable SemVer >> $GITHUB_OUTPUT
           
   build-tag-push:
     name: "Build, tag and push"
     needs: gitversion
     runs-on: ubuntu-latest
     steps:
+      - name: Load environment values
+        run: |
+          source <(echo "${{ needs.gitversion.outputs.properties }}")
       - uses: actions/checkout@v3
 #  The GitVersion GH actions give a NullReference exception for now.
 #      - uses: actions/setup-dotnet@v3
@@ -64,7 +60,7 @@ jobs:
         with:
           username: ${{ secrets.CI_REGISTRY_USER }}
           password: ${{ secrets.CI_REGISTRY_PASSWORD }}
-
+      
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -73,4 +69,4 @@ jobs:
           push: true
           tags: |
             voortman/talos-os-config-generator:latest
-            voortman/talos-os-config-generator:${{ needs.gitversion.outputs.semver }}
+            voortman/talos-os-config-generator:$GitVersion_SemVer
