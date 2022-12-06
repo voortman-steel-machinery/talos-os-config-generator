@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/voortman-steel-machinery/talos-os-config-generator/src/generator"
 )
 
 type GeneratedConfig struct {
@@ -28,7 +27,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.GET("/generate", generate)
+	e.GET("/generate-config", generateConfig)
 
 	httpPort := os.Getenv("HTTP_PORT")
 	if httpPort == "" {
@@ -39,7 +38,7 @@ func main() {
 }
 
 // Handler
-func generate(c echo.Context) error {
+func generateConfig(c echo.Context) error {
 	configRequest := new(ConfigRequest)
 	if err := c.Bind(configRequest); err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -49,13 +48,13 @@ func generate(c echo.Context) error {
 	var workerConfig []byte
 
 	var err error
-	configBundle, err := generator.GenerateConfig(configRequest.ClusterName, configRequest.ControlEndpoint, configRequest.IpAddress)
+	configBundle, err := GenerateConfig(configRequest.ClusterName, configRequest.ControlEndpoint, configRequest.IpAddress)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Cannot create config.")
 	}
 
 	if configRequest.ConfigPatch != nil {
-		controlplaneConfig, workerConfig, err = generator.ApplyPatch(configBundle, configRequest.ConfigPatch)
+		controlplaneConfig, workerConfig, err = ApplyPatch(configBundle, configRequest.ConfigPatch)
 		if err != nil {
 			return c.String(http.StatusInternalServerError, "Cannot apply patch.")
 		}

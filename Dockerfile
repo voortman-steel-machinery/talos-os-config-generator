@@ -5,17 +5,16 @@ FROM golang:1.19-buster AS build
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
 
-COPY ./src/api/*.go ./api/
-COPY ./src/generator/*.go ./generator/
+COPY ./src ./
 
-RUN go build -o /talos-os-config-generator ./api/
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /talos-os-config-generator ./api/
 
 ## Deploy
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/static-debian11
 WORKDIR /
 COPY --from=build /talos-os-config-generator /talos-os-config-generator
 EXPOSE 8080

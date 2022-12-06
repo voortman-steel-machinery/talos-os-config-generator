@@ -2,7 +2,10 @@ module github.com/voortman-steel-machinery/talos-os-config-generator
 
 go 1.19
 
-require github.com/siderolabs/talos/pkg/machinery v1.3.0-alpha.2
+require (
+	github.com/labstack/echo/v4 v4.9.1
+	github.com/siderolabs/talos/pkg/machinery v1.3.0-alpha.2
+)
 
 require (
 	github.com/containerd/go-cni v1.1.7 // indirect
@@ -16,7 +19,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/josharian/native v1.0.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.2.3 // indirect
-	github.com/labstack/echo/v4 v4.9.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
